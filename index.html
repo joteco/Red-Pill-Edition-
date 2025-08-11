@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Matrix Hack Game - Red Pill Edition</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            color: lime;
+            font-family: monospace;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        #game-container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 20px;
+        }
+        #menu {
+            margin-bottom: 20px;
+        }
+        button {
+            background: black;
+            color: lime;
+            border: 1px solid lime;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: lime;
+            color: black;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .card {
+            background: darkgreen;
+            color: black;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.3s;
+        }
+        .card.flipped {
+            background: lime;
+            color: black;
+        }
+        .card.matched {
+            background: green;
+            color: white;
+            cursor: default;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        #tutorial, #settings {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border: 1px solid lime;
+            max-width: 400px;
+        }
+        #notification {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,255,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        #red-pill-challenge {
+            display: none;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        #password-display {
+            font-size: 24px;
+            margin-bottom: 10px;
+            background: darkgreen;
+            padding: 10px;
+            word-break: break-word;
+        }
+        #password-input {
+            background: black;
+            color: lime;
+            border: 1px solid lime;
+            padding: 10px;
+            width: 100%;
+            font-size: 20px;
+        }
+        #treasure-reveal {
+            display: none;
+            font-size: 18px;
+            animation: reveal 2s ease-in-out;
+        }
+        @keyframes reveal {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        #credits {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            overflow: hidden;
+            z-index: 10;
+        }
+        #credits-content {
+            position: absolute;
+            bottom: 100%;
+            width: 100%;
+            text-align: center;
+            animation: scroll-up 10s linear forwards;
+        }
+        @keyframes scroll-up {
+            0% { bottom: 100%; }
+            100% { bottom: -100%; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-rain"></canvas>
+    <div id="game-container">
+        <h1>Matrix Hack Game - Red Pill Edition</h1>
+        <div id="menu">
+            <button id="start">Start Game</button>
+            <button id="red-pill-btn">Take the Red Pill</button>
+            <button id="settings-btn">Settings</button>
+            <button id="tutorial-btn">Tutorial</button>
+            <button id="premium">Unlock Premium</button>
+        </div>
+        <div id="puzzle" style="display:none;">
+            <h2>Challenge <span id="challenge-num">1</span> - Crack the Server</h2>
+            <div id="grid"></div>
+            <div id="timer">Time left: <span id="time-left">30</span> seconds</div>
+        </div>
+        <div id="red-pill-challenge" style="display:none;">
+            <h2>Red Pill Challenge - Level <span id="red-level">1</span></h2>
+            <p>Type the password exactly as shown before time runs out!</p>
+            <div id="password-display"></div>
+            <input type="text" id="password-input" placeholder="Type here...">
+            <div id="red-timer">Time left: <span id="red-time-left">20</span> seconds</div>
+            <div id="treasure-reveal"></div>
+        </div>
+        <div id="status"></div>
+    </div>
+    <div id="tutorial">
+        <h2>Tutorial</h2>
+        <p>Welcome to Matrix Hack! Channel your inner Neo.</p>
+        <p>Match words in main challenges or take the Red Pill for typing trials to uncover oracle treasures.</p>
+        <p>Premium unlocks more. Hack on!</p>
+        <button id="close-tutorial">Close</button>
+    </div>
+    <div id="settings">
+        <h2>Settings</h2>
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"><br>
+        <label for="rain-toggle">Matrix Rain:</label>
+        <input type="checkbox" id="rain-toggle" checked><br>
+        <label for="music-toggle">Background Music:</label>
+        <input type="checkbox" id="music-toggle" checked>
+        <button id="close-settings">Close</button>
+    </div>
+    <div id="notification"></div>
+    <div id="credits">
+        <div id="credits-content">
+            <h2>Game Credits</h2>
+            <p>Creator: Joteco</p>
+            <p>Designer: Charles</p>
+            <p>Writer: Leo</p>
+            <p>Producer: Charles</p>
+            <p>Publisher: Joteco</p>
+            <p>Executive Producer: Lukondo</p>
+            <p>Programmer: Charles</p>
+            <p>Thanks for playing!</p>
+        </div>
+    </div>
+
+    <!-- Note: These audio URLs are external; for itch distribution it's recommended you bundle audio with the game. -->
+    <audio id="bg-music" loop src="assets/music/matrix-theme.mp3"></audio>
+    <audio id="puzzle-music" loop src="assets/music/matrix_reloaded.mp3"></audio>
+    <audio id="solve-sound" src="assets/music/matrix-morpheus-speech-tomorrow-we-may-all-be-dead.mp3"></audio>
+    <audio id="complete-sound" src="assets/music/blue-steel-matrix.mp3"></audio>
+    <audio id="match-sound" src="assets/music/matrix-hacker-time.mp3"></audio>
+    <audio id="red-pill-sound" src="assets/music/you-take-the-red-pill-matrix.mp3"></audio>
+    <audio id="urgency-music" loop src="assets/music/matrix-garrix.mp3"></audio>
+    <audio id="gem-sound" src="assets/music/matrix_hZW6Dqw.mp3"></audio>
+    <audio id="end-sound" src="assets/music/the_matrix.mp3"></audio>
+
+    <script>
+        /* ------------------------------
+           Canvas / Matrix Rain
+           ------------------------------ */
+        const canvas = document.getElementById('matrix-rain');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            cols = Math.floor(canvas.width / fontSize);
+            // ensure rainDrops length matches columns
+            rainDrops.length = cols;
+            for (let i = 0; i < cols; i++) {
+                if (!rainDrops[i]) rainDrops[i] = 1;
+            }
+        }
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        let cols = Math.floor(window.innerWidth / fontSize);
+        const rainDrops = [];
+        for (let x = 0; x < cols; x++) rainDrops[x] = 1;
+
+        let rainInterval;
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+
+        function startRain() {
+            stopRain();
+            rainInterval = setInterval(draw, 30);
+        }
+        function stopRain() {
+            clearInterval(rainInterval);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        startRain();
+
+        /* ------------------------------
+           DOM references
+           ------------------------------ */
+        const bgMusic = document.getElementById('bg-music');
+        const puzzleMusic = document.getElementById('puzzle-music');
+        const solveSound = document.getElementById('solve-sound');
+        const completeSound = document.getElementById('complete-sound');
+        const matchSound = document.getElementById('match-sound');
+        const redPillSound = document.getElementById('red-pill-sound');
+        const urgencyMusic = document.getElementById('urgency-music');
+        const gemSound = document.getElementById('gem-sound');
+        const endSound = document.getElementById('end-sound');
+
+        const startBtn = document.getElementById('start');
+        const redPillBtn = document.getElementById('red-pill-btn');
+        const puzzleDiv = document.getElementById('puzzle');
+        const redChallengeDiv = document.getElementById('red-pill-challenge');
+        const grid = document.getElementById('grid');
+        const timeLeft = document.getElementById('time-left');
+        const challengeNum = document.getElementById('challenge-num');
+        const redLevel = document.getElementById('red-level');
+        const passwordDisplay = document.getElementById('password-display');
+        const passwordInput = document.getElementById('password-input');
+        const redTimeLeft = document.getElementById('red-time-left');
+        const treasureReveal = document.getElementById('treasure-reveal');
+        const status = document.getElementById('status');
+        const tutorialDiv = document.getElementById('tutorial');
+        const tutorialBtn = document.getElementById('tutorial-btn');
+        const closeTutorial = document.getElementById('close-tutorial');
+        const settingsDiv = document.getElementById('settings');
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeSettings = document.getElementById('close-settings');
+        const volumeSlider = document.getElementById('volume');
+        const rainToggle = document.getElementById('rain-toggle');
+        const musicToggle = document.getElementById('music-toggle');
+        const premiumBtn = document.getElementById('premium');
+        const notification = document.getElementById('notification');
+        const creditsDiv = document.getElementById('credits');
+        const creditsContent = document.getElementById('credits-content');
+        const menu = document.getElementById('menu'); // FIX: define menu (was missing)
+
+        /* ------------------------------
+           Game state
+           ------------------------------ */
+        let currentChallenge = 1;
+        let currentRedLevel = 1;
+        let timerInterval = null;
+        let redTimerInterval = null;
+        let timeRemaining = 30;
+        let redTimeRemaining = 20;
+        let selectedCards = [];
+        let matchesNeeded = 0;
+        let matchesFound = 0;
+        let isPremium = localStorage.getItem('matrixPremium') === 'true';
+        let redProgress = localStorage.getItem('redPillProgress') ? parseInt(localStorage.getItem('redPillProgress')) : 1;
+        let currentPassword = ''; // used by red pill handlers
+        currentRedLevel = redProgress;
+
+        const challenges = [
+            [
+                {word: 'hack', pair: 'crack'},
+                {word: 'crack', pair: 'hack'},
+                {word: 'code', pair: 'program'},
+                {word: 'program', pair: 'code'},
+                {word: 'virus', pair: 'malware'},
+                {word: 'malware', pair: 'virus'},
+                {word: 'firewall', pair: 'barrier'},
+                {word: 'barrier', pair: 'firewall'}
+            ],
+            [
+                {word: 'encrypt', pair: 'cipher'},
+                {word: 'cipher', pair: 'encrypt'},
+                {word: 'decrypt', pair: 'decode'},
+                {word: 'decode', pair: 'decrypt'},
+                {word: 'server', pair: 'host'},
+                {word: 'host', pair: 'server'},
+                {word: 'data', pair: 'info'},
+                {word: 'info', pair: 'data'},
+                {word: 'bug', pair: 'error'},
+                {word: 'error', pair: 'bug'}
+            ],
+            [
+                {word: 'network', pair: 'web'},
+                {word: 'web', pair: 'network'},
+                {word: 'protocol', pair: 'rule'},
+                {word: 'rule', pair: 'protocol'},
+                {word: 'algorithm', pair: 'method'},
+                {word: 'method', pair: 'algorithm'},
+                {word: 'binary', pair: 'bits'},
+                {word: 'bits', pair: 'binary'},
+                {word: 'matrix', pair: 'grid'},
+                {word: 'grid', pair: 'matrix'},
+                {word: 'neo', pair: 'one'},
+                {word: 'one', pair: 'neo'}
+            ],
+            [
+                {word: 'morpheus', pair: 'guide'},
+                {word: 'guide', pair: 'morpheus'},
+                {word: 'trinity', pair: 'love'},
+                {word: 'love', pair: 'trinity'},
+                {word: 'agent', pair: 'smith'},
+                {word: 'smith', pair: 'agent'},
+                {word: 'oracle', pair: 'prophet'},
+                {word: 'prophet', pair: 'oracle'},
+                {word: 'zion', pair: 'haven'},
+                {word: 'haven', pair: 'zion'},
+                {word: 'sentinel', pair: 'hunter'},
+                {word: 'hunter', pair: 'sentinel'},
+                {word: 'pill', pair: 'choice'},
+                {word: 'choice', pair: 'pill'}
+            ],
+            [
+                {word: 'redpill', pair: 'truth'},
+                {word: 'truth', pair: 'redpill'},
+                {word: 'bluepill', pair: 'illusion'},
+                {word: 'illusion', pair: 'bluepill'},
+                {word: 'spoon', pair: 'bend'},
+                {word: 'bend', pair: 'spoon'},
+                {word: 'bullet', pair: 'dodge'},
+                {word: 'dodge', pair: 'bullet'},
+                {word: 'architect', pair: 'creator'},
+                {word: 'creator', pair: 'architect'},
+                {word: 'merovingian', pair: 'exile'},
+                {word: 'exile', pair: 'merovingian'},
+                {word: 'keymaker', pair: 'unlock'},
+                {word: 'unlock', pair: 'keymaker'},
+                {word: 'neo', pair: 'savior'},
+                {word: 'savior', pair: 'neo'}
+            ]
+        ];
+
+        // Load main progress if stored
+        if (localStorage.getItem('matrixProgress')) {
+            currentChallenge = parseInt(localStorage.getItem('matrixProgress'));
+        }
+
+        /* ------------------------------
+           Audio helpers
+           ------------------------------ */
+        function setVolume(vol) {
+            bgMusic.volume = vol;
+            puzzleMusic.volume = vol;
+            solveSound.volume = vol;
+            completeSound.volume = vol;
+            matchSound.volume = vol;
+            redPillSound.volume = vol;
+            urgencyMusic.volume = vol;
+            gemSound.volume = vol;
+            endSound.volume = vol;
+        }
+
+        volumeSlider.addEventListener('input', (e) => {
+            setVolume(e.target.value);
+        });
+
+        rainToggle.addEventListener('change', (e) => {
+            if (e.target.checked) startRain();
+            else stopRain();
+        });
+
+        musicToggle.addEventListener('change', (e) => {
+            // Toggle playback only when user has interacted (to avoid autoplay rejection).
+            if (e.target.checked) {
+                try { bgMusic.play().catch(()=>{}); } catch(_) {}
+            } else {
+                bgMusic.pause();
+            }
+        });
+
+        // Ensure audio play after first user interaction (helps avoid autoplay blocks)
+        function allowAudioOnGesture() {
+            if (musicToggle.checked) {
+                try { bgMusic.play().catch(()=>{}); } catch(_) {}
+            }
+            // remove this listener after first meaningful gesture
+            document.removeEventListener('click', allowAudioOnGesture);
+        }
+        document.addEventListener('click', allowAudioOnGesture);
+
+        /* ------------------------------
+           Notification helper
+           ------------------------------ */
+        function showNotification(msg, ms = 3000) {
+            notification.textContent = msg;
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, ms);
+        }
+
+        /* ------------------------------
+           Puzzle / Matching logic
+           ------------------------------ */
+
+        // Clear any running timers safely
+        function clearGameTimers() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (redTimerInterval) {
+                clearInterval(redTimerInterval);
+                redTimerInterval = null;
+            }
+        }
+
+        startBtn.addEventListener('click', () => {
+            // If finished all levels
+            if (currentChallenge > challenges.length) {
+                status.textContent = 'All challenges completed! You are The One!';
+                completeSound.play();
+                return;
+            }
+            if (currentChallenge > 3 && !isPremium) {
+                showNotification('Premium required for advanced challenges. Unlock now!');
+                return;
+            }
+
+            // Stop any existing timers before starting a new game
+            clearGameTimers();
+
+            puzzleDiv.style.display = 'block';
+            menu.style.display = 'none';
+            try { puzzleMusic.play().catch(()=>{}); } catch(_) {}
+            try { bgMusic.pause(); } catch(_) {}
+            startPuzzle(currentChallenge);
+        });
+
+        function startPuzzle(level) {
+            // Robustness: clear any existing intervals
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            challengeNum.textContent = level;
+            grid.innerHTML = '';
+            selectedCards = [];
+            matchesFound = 0;
+            // number of pairs = half the number of cards in that level
+            matchesNeeded = Math.floor(challenges[level - 1].length / 2);
+            timeRemaining = 30 + (level - 1) * 10;
+            timeLeft.textContent = timeRemaining;
+            status.textContent = '';
+
+            // clone and shuffle the words array
+            let words = challenges[level - 1].slice();
+            // random shuffle (Fisher-Yates)
+            for (let i = words.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [words[i], words[j]] = [words[j], words[i]];
+            }
+
+            // create cards
+            words.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.word = item.word;
+                card.dataset.pair = item.pair;
+                card.dataset.index = index;
+                card.textContent = '?';
+                card.addEventListener('click', flipCard);
+                grid.appendChild(card);
+            });
+
+            // Start timer safely
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                timeLeft.textContent = timeRemaining;
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    status.textContent = 'Time up! Try again.';
+                    try { puzzleMusic.pause(); } catch(_) {}
+                    try { bgMusic.play().catch(()=>{}); } catch(_) {}
+                    // Show results briefly then return to menu
+                    setTimeout(() => {
+                        puzzleDiv.style.display = 'none';
+                        menu.style.display = 'block';
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        function flipCard(e) {
+            const card = e.currentTarget;
+            // Ignore clicks on matched or already flipped cards
+            if (selectedCards.length >= 2 || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+            card.textContent = card.dataset.word;
+            selectedCards.push(card);
+
+            if (selectedCards.length === 2) checkMatch();
+        }
+
+        function checkMatch() {
+            const [card1, card2] = selectedCards;
+            if (!card1 || !card2) {
+                selectedCards = [];
+                return;
+            }
+
+            // Match check supports word->pair or pair->word
+            if (card1.dataset.word === card2.dataset.pair || card1.dataset.pair === card2.dataset.word) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchesFound++;
+                try { matchSound.play().catch(()=>{}); } catch(_) {}
+                status.textContent = 'Match found! System breach progressing.';
+                // If all pairs found
+                if (matchesFound === matchesNeeded) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    status.textContent = 'Puzzle solved! Server cracked.';
+                    try { puzzleMusic.pause(); } catch(_) {}
+                    try {
+                        solveSound.play().catch(()=>{ bgMusic.play().catch(()=>{}); });
+                        solveSound.onended = () => { try { bgMusic.play().catch(()=>{}); } catch(_) {} };
+                    } catch (_) {
+                        try { bgMusic.play().catch(()=>{}); } catch(_) {}
+                    }
+                    currentChallenge++;
+                    localStorage.setItem('matrixProgress', currentChallenge);
+
+                    if (currentChallenge > challenges.length) {
+                        status.textContent = 'All challenges completed! You hacked the Matrix like Neo!';
+                        try { completeSound.play().catch(()=>{}); } catch(_) {}
+                    }
+
+                    // return to menu after a short delay
+                    setTimeout(() => {
+                        puzzleDiv.style.display = 'none';
+                        menu.style.display = 'block';
+                    }, 1500);
+                }
+            } else {
+                status.textContent = 'No match. Security alert!';
+                // flip back after delay
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.textContent = '?';
+                    card2.textContent = '?';
+                }, 800);
+            }
+            selectedCards = [];
+        }
+
+        /* ------------------------------
+           Red Pill (typing) challenge
+           ------------------------------ */
+
+        premiumBtn.addEventListener('click', () => {
+            isPremium = true;
+            localStorage.setItem('matrixPremium', 'true');
+            showNotification('Premium Unlocked! Access advanced challenges.');
+        });
+
+        redPillBtn.addEventListener('click', () => {
+            if (currentRedLevel > 3) {
+                status.textContent = 'Red Pill path completed! Treasures unlocked.';
+                return;
+            }
+            try { redPillSound.play().catch(()=>{}); } catch(_) {}
+            menu.style.display = 'none';
+            redChallengeDiv.style.display = 'block';
+            try { bgMusic.pause(); } catch(_) {}
+            startRedChallenge(currentRedLevel);
+        });
+
+        function generateRandomPassword(length = 12) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+            let pass = '';
+            for (let i = 0; i < length; i++) {
+                pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return pass;
+        }
+
+        // We'll keep the input listeners single (no stacking)
+        function onPasswordInput() {
+            if (!currentPassword) return;
+            if (passwordInput.value === currentPassword && redTimeRemaining > 0) {
+                finishRedChallenge(true);
+            }
+        }
+
+        function onPasswordKeydown(e) {
+            if (e.key === 'Enter') {
+                if (passwordInput.value === currentPassword && redTimeRemaining > 0) {
+                    finishRedChallenge(true);
+                }
+            }
+        }
+
+        // Attach these once
+        passwordInput.addEventListener('input', onPasswordInput);
+        passwordInput.addEventListener('keydown', onPasswordKeydown);
+
+        function startRedChallenge(level) {
+            // clear any previous red timer first
+            if (redTimerInterval) {
+                clearInterval(redTimerInterval);
+                redTimerInterval = null;
+            }
+
+            redLevel.textContent = level;
+            const password = generateRandomPassword(10 + level * 2);
+            currentPassword = password; // store globally for handlers
+            passwordDisplay.textContent = password;
+            passwordInput.value = '';
+            treasureReveal.style.display = 'none';
+            redTimeRemaining = 20;
+            redTimeLeft.textContent = redTimeRemaining;
+            try { urgencyMusic.play().catch(()=>{}); } catch(_) {}
+            status.textContent = 'Type fast!';
+
+            passwordInput.focus();
+
+            redTimerInterval = setInterval(() => {
+                redTimeRemaining--;
+                redTimeLeft.textContent = redTimeRemaining;
+                if (redTimeRemaining <= 0) {
+                    clearInterval(redTimerInterval);
+                    redTimerInterval = null;
+                    finishRedChallenge(false);
+                }
+            }, 1000);
+        }
+
+        function finishRedChallenge(success) {
+            // stop timer and sounds
+            if (redTimerInterval) {
+                clearInterval(redTimerInterval);
+                redTimerInterval = null;
+            }
+            try { urgencyMusic.pause(); } catch(_) {}
+
+            if (success) {
+                try { gemSound.play().catch(()=>{}); } catch(_) {}
+                status.textContent = 'Password correct! Treasure unlocked.';
+                showTreasure(currentRedLevel);
+            } else {
+                status.textContent = 'Time up! Game over. Try this level again.';
+                try { bgMusic.play().catch(()=>{}); } catch(_) {}
+                // return to menu after short delay
+                setTimeout(() => {
+                    redChallengeDiv.style.display = 'none';
+                    menu.style.display = 'block';
+                }, 1200);
+            }
+        }
+
+        function showTreasure(level) {
+            const treasures = [
+                "Oracle's Wisdom: 'There is no spoon.'",
+                "Oracle's Secret: 'Know thyself.'",
+                "Oracle's Treasure: 'The Matrix has you...'"
+            ];
+            treasureReveal.textContent = treasures[level - 1] || "Oracle's Gift";
+            treasureReveal.style.display = 'block';
+            currentRedLevel++;
+            localStorage.setItem('redPillProgress', currentRedLevel);
+
+            if (currentRedLevel > 3) {
+                status.textContent = 'All treasures unlocked! Game complete.';
+                try { endSound.play().catch(()=>{}); } catch(_) {}
+                setTimeout(() => {
+                    creditsDiv.style.display = 'block';
+                    creditsContent.style.animation = 'scroll-up 15s linear forwards';
+                    setTimeout(() => {
+                        creditsDiv.style.display = 'none';
+                        redChallengeDiv.style.display = 'none';
+                        menu.style.display = 'block';
+                        try { bgMusic.play().catch(()=>{}); } catch(_) {}
+                    }, 15000);
+                }, 1000);
+            } else {
+                // Continue to next red challenge after short pause
+                setTimeout(() => {
+                    startRedChallenge(currentRedLevel);
+                }, 2000);
+            }
+        }
+
+        /* ------------------------------
+           Tutorial & Settings handlers
+           ------------------------------ */
+        tutorialBtn.addEventListener('click', () => {
+            tutorialDiv.style.display = 'block';
+        });
+        closeTutorial.addEventListener('click', () => {
+            tutorialDiv.style.display = 'none';
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            settingsDiv.style.display = 'block';
+        });
+        closeSettings.addEventListener('click', () => {
+            settingsDiv.style.display = 'none';
+        });
+
+        /* ------------------------------
+           Initial setup
+           ------------------------------ */
+        setVolume(0.5);
+        // Do not auto-play bgMusic on load (some browsers block it). Instead, allow play after user gesture.
+        // bgMusic.play();
+
+        // Clean up intervals if user leaves page (helps prevent runaway timers in dev)
+        window.addEventListener('beforeunload', () => {
+            clearGameTimers();
+        });
+
+        // Expose a small console helper for debugging (optional)
+        window.__matrixGameDebug = {
+            resetProgress: () => {
+                localStorage.removeItem('matrixProgress');
+                localStorage.removeItem('matrixPremium');
+                localStorage.removeItem('redPillProgress');
+                currentChallenge = 1;
+                currentRedLevel = 1;
+                isPremium = false;
+                showNotification('Progress reset (debug).');
+            }
+        };
+    </script>
+</body>
+</html>
