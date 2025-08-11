@@ -21,7 +21,9 @@ Red Pill Challenge – Typing Trials
 💊 Each level: longer passwords, higher stakes.
 💊 Beat all levels to unlock Oracle’s treasures and secret ending credits.
 
+
 <img width="1920" height="947" alt="Screenshot 2025-08-12 at 00-55-14 Matrix Hack Game - Red Pill Edition (Fixed)" src="https://github.com/user-attachments/assets/436dd57b-a736-465f-a416-68424835f89b" />
+
 
 
 Settings & Extras
